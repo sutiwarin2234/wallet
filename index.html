@@ -8,16 +8,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-512.png">
 <link rel="manifest" href="manifest.json">
 <style>
-  :root { --bg: #f2f2f7; --card: #ffffff; --text: #1c1c1e; --muted: #8e8e93; --accent: #007aff; --err: #ff3b30; }
+  :root { --bg: #ffffff; --card: #f2f2f2; --text: #0a0a0a; --muted: #666666; --accent: #0a0a0a; --on-accent: #ffffff; --err: #d71e17; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #000000; --card: #1c1c1e; --text: #f2f2f7; --muted: #98989f; --accent: #0a84ff; --err: #ff453a; }
+    :root { --bg: #000000; --card: #141414; --text: #f2f2f2; --muted: #9a9a9a; --accent: #f2f2f2; --on-accent: #000000; --err: #ff4a42; }
   }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Sukhumvit Set", "Thonburi", system-ui, sans-serif; }
@@ -36,9 +36,9 @@
   .screen.hide { opacity: 0; pointer-events: none; }
   .muted { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 320px; }
   #setup input { width: 100%; max-width: 320px; box-sizing: border-box; border: 0; background: var(--card); color: var(--text);
-    border-radius: 12px; padding: 14px; font-size: 15px; font-family: inherit; }
-  #setup button { width: 100%; max-width: 320px; border: 0; border-radius: 12px; padding: 14px; font-size: 17px; font-weight: 600;
-    color: #fff; background: var(--accent); font-family: inherit; }
+    border-radius: 0; padding: 14px; font-size: 15px; font-family: inherit; }
+  #setup button { width: 100%; max-width: 320px; border: 0; border-radius: 0; padding: 14px; font-size: 17px; font-weight: 700;
+    color: var(--on-accent); background: var(--accent); font-family: inherit; }
   #setupMsg.err { color: var(--err); }
   .hidden { display: none !important; }
 </style>

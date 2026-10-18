@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>รายรับรายจ่าย</title>
+<meta name="apple-mobile-web-app-title" content="รายรับรายจ่าย">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#032464">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root { --bg: #032464; --text: #ffffff; --muted: #b7c3dd; --accent: #5ee0b3; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Sukhumvit Set", "Thonburi", system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px 16px; text-align: center;
+  }
+  img { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+  h1 { font-size: 24px; margin: 20px 0 6px; }
+  p { color: var(--muted); margin: 0; line-height: 1.6; }
+  a.open {
+    display: inline-block; margin-top: 24px; padding: 14px 36px; border-radius: 14px;
+    background: var(--accent); color: #032464; font-weight: 700; font-size: 17px; text-decoration: none;
+  }
+  .how { margin-top: 28px; font-size: 14px; max-width: 320px; }
+  .standalone .how, .standalone a.open { display: none; }
+</style>
+</head>
+<body>
+  <img src="apple-touch-icon.png" alt="">
+  <h1>รายรับรายจ่าย</h1>
+  <p id="status">บันทึกรายรับรายจ่ายลง Google Sheet</p>
+  <a class="open" id="open" href="#">เปิดแอป</a>
+  <p class="how">ติดตั้งบน iPhone: เปิดหน้านี้ใน Safari แล้วกด แชร์ (⬆️) → เพิ่มไปยังหน้าจอโฮม</p>
+
+<script>
+  // URL ของเว็บแอป Apps Script (ถ้า Deploy ใหม่แล้ว URL เปลี่ยน ให้แก้ตรงนี้)
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbyiNA777G14-ZGaqXeb1AJ65dCzvbIkk_NriGm-ay6OxuMW-Hs73OA_lJ15QDzRm2xy/exec';
+
+  document.getElementById('open').href = APP_URL;
+
+  // เปิดจากไอคอนบนหน้าจอโฮม → ไปที่แอปทันที
+  var standalone = window.navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  if (standalone) {
+    document.body.classList.add('standalone');
+    document.getElementById('status').textContent = 'กำลังเปิด…';
+    location.replace(APP_URL);
+  }
+</script>
+</body>
+</html>

@@ -10,13 +10,17 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-512.png">
 <link rel="manifest" href="manifest.json">
 <style>
-  :root { --bg: #f2f2f7; --muted: #8e8e93; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #000000; --muted: #98989f; } }
-  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  :root { --bg: #f2f2f7; --card: #ffffff; --text: #1c1c1e; --muted: #8e8e93; --accent: #007aff; --err: #ff3b30; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #000000; --card: #1c1c1e; --text: #f2f2f7; --muted: #98989f; --accent: #0a84ff; --err: #ff453a; }
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Sukhumvit Set", "Thonburi", system-ui, sans-serif; }
   /* แอปจริงเปิดเต็มจอ เว้นที่ให้แถบสถานะและขอบล่างของ iPhone */
   iframe {
     position: fixed; border: 0;
@@ -24,48 +28,86 @@
     width: 100%; height: calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     background: var(--bg);
   }
-  .splash {
+  .screen {
     position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-family: -apple-system, BlinkMacSystemFont, "Sukhumvit Set", "Thonburi", system-ui, sans-serif;
-    color: var(--muted); font-size: 14px; gap: 14px; transition: opacity .3s;
+    padding: 24px 16px; text-align: center; gap: 14px; transition: opacity .3s;
   }
-  .splash img { width: 88px; height: 88px; border-radius: 20px; }
-  .splash.hide { opacity: 0; pointer-events: none; }
+  .screen img { width: 88px; height: 88px; border-radius: 20px; }
+  .screen.hide { opacity: 0; pointer-events: none; }
+  .muted { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 320px; }
+  #setup input { width: 100%; max-width: 320px; box-sizing: border-box; border: 0; background: var(--card); color: var(--text);
+    border-radius: 12px; padding: 14px; font-size: 15px; font-family: inherit; }
+  #setup button { width: 100%; max-width: 320px; border: 0; border-radius: 12px; padding: 14px; font-size: 17px; font-weight: 600;
+    color: #fff; background: var(--accent); font-family: inherit; }
+  #setupMsg.err { color: var(--err); }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
-  <div class="splash" id="splash">
+  <div class="screen" id="splash">
     <img src="apple-touch-icon.png" alt="">
-    <div>กำลังเปิด…</div>
+    <div class="muted">กำลังเปิด…</div>
   </div>
-  <iframe id="app" title="รายรับรายจ่าย" allow="clipboard-write"></iframe>
+
+  <!-- ตั้งค่าครั้งแรกในเครื่องนี้: ลิงก์ของแอปไม่ได้อยู่ในไฟล์นี้ เพื่อไม่ให้ใครเห็นจาก GitHub -->
+  <div class="screen hidden" id="setup">
+    <img src="apple-touch-icon.png" alt="">
+    <b>ตั้งค่าครั้งแรก</b>
+    <div class="muted" id="setupMsg">วางรหัสแอป (หรือลิงก์ที่ลงท้ายด้วย /exec) แล้วกดบันทึก ทำครั้งเดียวต่อเครื่อง</div>
+    <input id="setupInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AKfy…">
+    <button id="setupSave">บันทึก</button>
+  </div>
+
+  <iframe id="app" class="hidden" title="รายรับรายจ่าย" referrerpolicy="no-referrer"></iframe>
 
 <script>
-  // URL ของเว็บแอป Apps Script (ถ้า Deploy ใหม่แล้ว URL เปลี่ยน ให้แก้ตรงนี้)
-  var APP_URL = 'https://script.google.com/macros/s/AKfycbyiNA777G14-ZGaqXeb1AJ65dCzvbIkk_NriGm-ay6OxuMW-Hs73OA_lJ15QDzRm2xy/exec';
-  var PIN_KEY = 'income-expense-pin';
+  var KEY = 'income-expense-app-id';
 
-  var frame = document.getElementById('app');
-  frame.addEventListener('load', function () {
-    setTimeout(function () { document.getElementById('splash').classList.add('hide'); }, 300);
-  });
-  frame.src = APP_URL;
+  function storeGet() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+  function storeSet(v) { try { localStorage.setItem(KEY, v); return true; } catch (e) { return false; } }
 
-  // แอปที่ฝังอยู่ขอ/บันทึก PIN ผ่านหน้านี้ เพราะหน้านี้เก็บข้อมูลในเครื่องได้ถาวรกว่าเฟรมที่ฝังไว้
-  function fromApp(origin) { return /\.googleusercontent\.com$/.test(new URL(origin).hostname); }
+  // รับได้ทั้งรหัส deployment (AKfy…) และลิงก์เต็ม …/macros/s/AKfy…/exec
+  function parseId(text) {
+    var m = String(text || '').trim().match(/(AKfy[\w-]{20,})/);
+    return m ? m[1] : '';
+  }
 
-  window.addEventListener('message', function (e) {
-    if (!e.data || typeof e.data !== 'object' || !fromApp(e.origin)) return;
-    var pin = '';
-    if (e.data.type === 'ie-get-pin') {
-      try { pin = localStorage.getItem(PIN_KEY) || ''; } catch (err) {}
-      e.source.postMessage({ type: 'ie-pin', pin: pin }, e.origin);
-    } else if (e.data.type === 'ie-set-pin') {
-      try {
-        if (e.data.pin) localStorage.setItem(PIN_KEY, String(e.data.pin));
-        else localStorage.removeItem(PIN_KEY);
-      } catch (err) {}
+  function openApp(id) {
+    var frame = document.getElementById('app');
+    document.getElementById('setup').classList.add('hidden');
+    frame.classList.remove('hidden');
+    frame.addEventListener('load', function () {
+      setTimeout(function () { document.getElementById('splash').classList.add('hide'); }, 300);
+    });
+    frame.src = 'https://script.google.com/macros/s/' + id + '/exec';
+  }
+
+  function showSetup(msg) {
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('setup').classList.remove('hidden');
+    if (msg) {
+      var el = document.getElementById('setupMsg');
+      el.textContent = msg;
+      el.className = 'muted err';
     }
+  }
+
+  // ลิงก์ตั้งค่า: …/#setup=AKfy… (ส่วนหลัง # ไม่ถูกส่งไปที่เซิร์ฟเวอร์) แล้วลบออกจากแถบที่อยู่ทันที
+  var fromHash = parseId((location.hash.match(/setup=([^&]+)/) || [])[1]);
+  if (fromHash) {
+    storeSet(fromHash);
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  var id = fromHash || storeGet();
+  if (id) openApp(id);
+  else showSetup();
+
+  document.getElementById('setupSave').addEventListener('click', function () {
+    var v = parseId(document.getElementById('setupInput').value);
+    if (!v) { showSetup('รหัสไม่ถูกต้อง ต้องขึ้นต้นด้วย AKfy'); return; }
+    if (!storeSet(v)) { showSetup('บันทึกในเครื่องไม่ได้ ลองปิดโหมดส่วนตัวของ Safari'); return; }
+    openApp(v);
   });
 </script>
 </body>
